@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/DatabaseConnection.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/TestDB.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Vehicle.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Car.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Bike.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Van.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Customer.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/model/Rental.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/VehicleDAO.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/TestVehicleDAO.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/CustomerDAO.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/TestCustomerDAO.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/dao/RentalDAO.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/service/RentalService.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/MainFrame.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/admin/AdminPanel.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/rental/RentalPanel.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/admin/VehiclePanel.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/admin/CustomerPanel.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/rental/RentVehiclePanel.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/rental/ReturnVehiclePanel.java</file>
+        </group>
+    </open-files>
+</project-private>
