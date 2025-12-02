@@ -47,7 +47,7 @@ public class VehicleDAO {
     // SELECT AVAILABLE
     public List<Vehicle> getAvailableVehicles() throws SQLException {
         List<Vehicle> list = new ArrayList<>();
-        String sql = "SELECT * FROM vehicle WHERE available = true";
+        String sql = "SELECT * FROM vehicle WHERE available = TRUE";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
