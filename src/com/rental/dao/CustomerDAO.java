@@ -71,4 +71,31 @@ public class CustomerDAO {
         }
         return null;
     }
+    public Customer getCustomerByIdentifier(String identifier) throws SQLException {
+        String sql = """
+            SELECT * FROM customer
+            WHERE phone = ? OR email = ?
+            LIMIT 1
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, identifier);
+            ps.setString(2, identifier);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Customer c = new Customer();
+                    c.setId(rs.getInt("id"));
+                    c.setType(rs.getString("type"));
+                    c.setName(rs.getString("name"));
+                    c.setPhone(rs.getString("phone"));
+                    c.setEmail(rs.getString("email"));
+                    return c;
+                }
+            }
+        }
+        return null;
+    }
 }

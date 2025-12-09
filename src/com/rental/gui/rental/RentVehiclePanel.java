@@ -17,9 +17,9 @@ import java.util.List;
 
 public class RentVehiclePanel extends JPanel {
 
-    private final CustomerDAO customerDAO = new CustomerDAO();
     private final VehicleDAO vehicleDAO = new VehicleDAO();
     private final RentalService rentalService = new RentalService();
+    private final Customer customer;
 
     // Modern colors
     private static final Color PRIMARY_COLOR = new Color(46, 204, 113);
@@ -30,16 +30,15 @@ public class RentVehiclePanel extends JPanel {
     private static final Color TEXT_DARK = new Color(44, 62, 80);
     private static final Color TEXT_LIGHT = new Color(127, 140, 141);
 
-    private JComboBox<Customer> cmbCustomer;
     private JTable vehicleTable;
     private DefaultTableModel tableModel;
     private JTextField txtStartDate;
     private JTextField txtEndDate;
     private JLabel lblCalculatedPrice;
 
-    public RentVehiclePanel() {
+    public RentVehiclePanel(Customer customer) {
+        this.customer = customer;
         initUI();
-        loadCustomers();
         loadVehicles();
     }
 
@@ -81,7 +80,7 @@ public class RentVehiclePanel extends JPanel {
         titleLabel.setForeground(TEXT_DARK);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel subtitleLabel = new JLabel("Select a customer and available vehicle to create a rental");
+        JLabel subtitleLabel = new JLabel("Select an available vehicle to create a rental");
         subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         subtitleLabel.setForeground(TEXT_LIGHT);
         subtitleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -114,27 +113,18 @@ public class RentVehiclePanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Row 1
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        formPanel.add(createLabel("Select Customer:"), gbc);
         
+        // Row 1 – Logged-in Customer (READ ONLY)
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
+        formPanel.add(createLabel("Customer:"), gbc);
+
         gbc.gridx = 1; gbc.weightx = 1;
-        cmbCustomer = new JComboBox<>();
-        cmbCustomer.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        cmbCustomer.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, 
-                    int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Customer) {
-                    Customer c = (Customer) value;
-                    setText(c.getName() + " - " + c.getPhone());
-                }
-                return this;
-            }
-        });
-        formPanel.add(cmbCustomer, gbc);
+        JLabel lblCustomer = new JLabel(
+                customer.getName() + " (" + customer.getPhone() + ")"
+        );
+        lblCustomer.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblCustomer.setForeground(TEXT_DARK);
+        formPanel.add(lblCustomer, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(createLabel("Start Date (YYYY-MM-DD):"), gbc);
@@ -329,18 +319,6 @@ public class RentVehiclePanel extends JPanel {
         }
     }
 
-    private void loadCustomers() {
-        try {
-            List<Customer> customers = customerDAO.getAllCustomers();
-            cmbCustomer.removeAllItems();
-            for (Customer c : customers) {
-                cmbCustomer.addItem(c);
-            }
-        } catch (SQLException e) {
-            showError("Error loading customers: " + e.getMessage());
-        }
-    }
-
     private void loadVehicles() {
         try {
             List<Vehicle> vehicles = vehicleDAO.getAvailableVehicles();
@@ -363,7 +341,7 @@ public class RentVehiclePanel extends JPanel {
 
     private void rentVehicle() {
         int row = vehicleTable.getSelectedRow();
-        Customer customer = (Customer) cmbCustomer.getSelectedItem();
+        Customer customer = this.customer;
 
         if (customer == null || row < 0) {
             showError("Please select a customer and a vehicle.");

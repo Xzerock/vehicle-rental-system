@@ -78,6 +78,51 @@ public class RentalDAO {
         }
         return list;
     }
+    
+    public List<Rental> getActiveRentalsByCustomer(int customerId) throws SQLException {
+
+        List<Rental> list = new ArrayList<>();
+
+        String sql = """
+            SELECT r.*, c.name, v.type, v.brand, v.model
+            FROM rental r
+            JOIN customer c ON r.customer_id = c.id
+            JOIN vehicle v ON r.vehicle_id = v.id
+            WHERE r.return_date IS NULL
+              AND r.customer_id = ?
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, customerId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Rental rental = new Rental();
+
+                    rental.setRentalId(rs.getInt("rental_id"));
+                    rental.setRentalDate(rs.getDate("rental_date").toLocalDate());
+                    rental.setTotalPrice(rs.getDouble("total_price"));
+
+                    Customer customer = new Customer();
+                    customer.setId(customerId);
+                    customer.setName(rs.getString("name"));
+
+                    Vehicle vehicle = new Car(); // fine for now
+                    vehicle.setId(rs.getInt("vehicle_id"));
+                    vehicle.setBrand(rs.getString("brand"));
+                    vehicle.setModel(rs.getString("model"));
+
+                    rental.setCustomer(customer);
+                    rental.setVehicle(vehicle);
+
+                    list.add(rental);
+                }
+            }
+        }
+        return list;
+    }
 
     // RETURN VEHICLE
     public void returnVehicle(int rentalId, LocalDate returnDate)

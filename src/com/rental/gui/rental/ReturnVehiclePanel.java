@@ -2,6 +2,7 @@ package com.rental.gui.rental;
 
 import com.rental.dao.RentalDAO;
 import com.rental.model.Rental;
+import com.rental.model.Customer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -15,6 +16,7 @@ import java.util.List;
 public class ReturnVehiclePanel extends JPanel {
     
     private final RentalDAO rentalDAO = new RentalDAO();
+    private final Customer customer;
     
     // Modern colors
     private static final Color PRIMARY_COLOR = new Color(46, 204, 113);
@@ -31,7 +33,8 @@ public class ReturnVehiclePanel extends JPanel {
     private DefaultTableModel tableModel;
     private JLabel lblSelectedRental;
     
-    public ReturnVehiclePanel() {
+    public ReturnVehiclePanel(Customer customer) {
+        this.customer = customer;
         initUI();
         loadActiveRentals();
     }
@@ -273,7 +276,8 @@ public class ReturnVehiclePanel extends JPanel {
     
     private void loadActiveRentals() {
         try {
-            List<Rental> rentals = rentalDAO.getActiveRentals();
+            List<Rental> rentals =
+                rentalDAO.getActiveRentalsByCustomer(customer.getId());
             tableModel.setRowCount(0);
             
             for (Rental r : rentals) {

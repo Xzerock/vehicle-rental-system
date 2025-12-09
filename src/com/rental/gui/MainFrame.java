@@ -3,6 +3,8 @@ package com.rental.gui;
 import com.rental.gui.admin.AdminPanel;
 import com.rental.gui.rental.RentalPanel;
 import com.rental.gui.admin.AdminLoginDialog;
+import com.rental.gui.customer.CustomerLoginDialog;
+import com.rental.model.Customer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -126,7 +128,15 @@ public class MainFrame extends JFrame {
             "Browse and rent vehicles for your needs",
             new String[]{"• Browse available vehicles", "• Make reservations", "• View rental history", "• Manage bookings"},
             SUCCESS_COLOR,
-            e -> showRentalPanel()
+            e -> {
+                CustomerLoginDialog dialog = new CustomerLoginDialog(this);
+                dialog.setVisible(true);
+
+                Customer customer = dialog.getAuthenticatedCustomer();
+                if (customer != null) {
+                    showRentalPanel(customer); // ✅ logged-in access
+                }
+            }
         );
         
         cardsPanel.add(adminCard);
@@ -233,7 +243,7 @@ public class MainFrame extends JFrame {
         footerPanel.setPreferredSize(new Dimension(0, 40));
         footerPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
         
-        JLabel copyrightLabel = new JLabel("© 2024 Vehicle Rental System. All rights reserved.");
+        JLabel copyrightLabel = new JLabel("© 2025 Vehicle Rental System. All rights reserved.");
         copyrightLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         copyrightLabel.setForeground(new Color(189, 195, 199));
         
@@ -253,9 +263,9 @@ public class MainFrame extends JFrame {
         refresh();
     }
     
-    private void showRentalPanel() {
+    private void showRentalPanel(Customer customer) {
         contentPanel.removeAll();
-        contentPanel.add(new RentalPanel(this), BorderLayout.CENTER);
+        contentPanel.add(new RentalPanel(this, customer), BorderLayout.CENTER);
         refresh();
     }
     

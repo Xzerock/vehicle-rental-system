@@ -1,6 +1,7 @@
 package com.rental.gui.rental;
 
 import com.rental.gui.MainFrame;
+import com.rental.model.Customer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -10,6 +11,7 @@ public class RentalPanel extends JPanel {
     private final MainFrame mainFrame;
     private JPanel contentArea;
     private JButton selectedButton;
+    private final Customer customer;
     
     // Modern colors
     private static final Color PRIMARY_COLOR = new Color(46, 204, 113);
@@ -21,8 +23,9 @@ public class RentalPanel extends JPanel {
     private static final Color TEXT_DARK = new Color(44, 62, 80);
     private static final Color DANGER_COLOR = new Color(231, 76, 60);
     
-    public RentalPanel(MainFrame mainFrame) {
+    public RentalPanel(MainFrame mainFrame, Customer customer) {
         this.mainFrame = mainFrame;
+        this.customer = customer;
         initUI();
     }
     
@@ -55,7 +58,7 @@ public class RentalPanel extends JPanel {
         
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         userPanel.setOpaque(false);
-        JLabel userLabel = new JLabel("Guest User");
+        JLabel userLabel = new JLabel(customer.getName());
         userLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         userLabel.setForeground(TEXT_WHITE);
         userPanel.add(userLabel);
@@ -174,13 +177,13 @@ public class RentalPanel extends JPanel {
     }
     
     private void showRentPanel() {
-        RentVehiclePanel rentPanel = new RentVehiclePanel();
+        RentVehiclePanel rentPanel = new RentVehiclePanel(customer);
         addBackButtonSupport(rentPanel);
         switchPanel(rentPanel);
     }
     
     private void showReturnPanel() {
-        ReturnVehiclePanel returnPanel = new ReturnVehiclePanel();
+        ReturnVehiclePanel returnPanel = new ReturnVehiclePanel(customer);
         addBackButtonSupport(returnPanel);
         switchPanel(returnPanel);
     }

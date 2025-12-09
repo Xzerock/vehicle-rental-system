@@ -154,7 +154,7 @@ public class VehiclePanel extends JPanel {
 
         // Row 3
         gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
-        formPanel.add(createLabel("Price/Day ($):"), gbc);
+        formPanel.add(createLabel("Price/Day (0.00):"), gbc);
         
         gbc.gridx = 1; gbc.weightx = 1;
         txtPrice = createStyledTextField();
@@ -206,7 +206,7 @@ public class VehiclePanel extends JPanel {
         tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         tableTitle.setForeground(TEXT_DARK);
 
-        JButton btnRefresh = createStyledButton("🔄 Refresh", PRIMARY_COLOR);
+        JButton btnRefresh = createStyledButton("Refresh", PRIMARY_COLOR);
         btnRefresh.addActionListener(e -> loadVehicles());
 
         headerPanel.add(tableTitle, BorderLayout.WEST);
@@ -262,24 +262,33 @@ public class VehiclePanel extends JPanel {
 
         table.getColumnModel().getColumn(6).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
+                super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+
                 setHorizontalAlignment(JLabel.CENTER);
 
-                if (!isSelected) {
-                    if (value instanceof Boolean && (Boolean) value) {
-                        c.setForeground(SUCCESS_COLOR);
-                        setText("✓ Available");
-                    } else {
-                        c.setForeground(DANGER_COLOR);
-                        setText("✗ Rented");
-                    }
+                boolean available = Boolean.TRUE.equals(value);
+
+                if (available) {
+                    setText("Available");
+                    setForeground(SUCCESS_COLOR);
+                } else {
+                    setText("Rented");
+                    setForeground(DANGER_COLOR);
                 }
-                return c;
+
+                if (isSelected) {
+                    setForeground(Color.WHITE); // keep readable when selected
+                }
+
+                return this;
             }
         });
-
+        
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
 
