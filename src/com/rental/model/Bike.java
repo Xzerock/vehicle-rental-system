@@ -8,8 +8,8 @@ public class Bike extends Vehicle {
 
     public Bike(int id, String brand, String model,
                 String plateNumber, double pricePerDay,
-                boolean available, int engineCC) {
-        super(id, brand, model, plateNumber, pricePerDay, available);
+                boolean available, int engineCC, String imagePath) {
+        super(id, brand, model, plateNumber, pricePerDay, available, imagePath);
         this.engineCC = engineCC;
     }
 
@@ -19,5 +19,10 @@ public class Bike extends Vehicle {
     @Override
     public String getType() {
         return "BIKE";
+    }
+    
+    @Override
+    public String getExtra() {
+        return engineCC + " cc";
     }
 }

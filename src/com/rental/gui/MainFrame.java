@@ -3,8 +3,8 @@ package com.rental.gui;
 import com.rental.gui.admin.AdminPanel;
 import com.rental.gui.rental.RentalPanel;
 import com.rental.gui.admin.AdminLoginDialog;
-import com.rental.gui.customer.CustomerLoginDialog;
 import com.rental.model.Customer;
+import com.rental.gui.customer.CustomerLoginDialog;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -69,7 +69,7 @@ public class MainFrame extends JFrame {
         JLabel titleLabel = new JLabel("Vehicle Rental System");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
         titleLabel.setForeground(Color.WHITE);
-        
+
         titlePanel.add(titleLabel);
         titlePanel.add(Box.createRigidArea(new Dimension(0, 5)));
         
@@ -111,7 +111,7 @@ public class MainFrame extends JFrame {
         JPanel adminCard = createRoleCard(
             "Administrator",
             "Manage vehicles, customers, and system settings",
-            new String[]{"• Manage vehicle inventory", "• View all rentals", "• Generate reports", "• System administration"},
+            new String[]{"Manage vehicle inventory", "View all rentals", "Generate reports", "System administration"},
             PRIMARY_COLOR,
             e -> {
                 AdminLoginDialog dialog = new AdminLoginDialog(this);
@@ -126,17 +126,9 @@ public class MainFrame extends JFrame {
         JPanel rentalCard = createRoleCard(
             "Customer Portal",
             "Browse and rent vehicles for your needs",
-            new String[]{"• Browse available vehicles", "• Make reservations", "• View rental history", "• Manage bookings"},
+            new String[]{"Browse available vehicles", "Make reservations", "View rental history", "Manage bookings"},
             SUCCESS_COLOR,
-            e -> {
-                CustomerLoginDialog dialog = new CustomerLoginDialog(this);
-                dialog.setVisible(true);
-
-                Customer customer = dialog.getAuthenticatedCustomer();
-                if (customer != null) {
-                    showRentalPanel(customer); // ✅ logged-in access
-                }
-            }
+            e -> showRentalPanel()
         );
         
         cardsPanel.add(adminCard);
@@ -184,7 +176,7 @@ public class MainFrame extends JFrame {
         titleLabel.setForeground(TEXT_DARK);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        JLabel descLabel = new JLabel(description);
+        JLabel descLabel = new JLabel("<html>" + description + "</html>");
         descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         descLabel.setForeground(TEXT_LIGHT);
         descLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -200,7 +192,7 @@ public class MainFrame extends JFrame {
         featuresPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
         
         for (String feature : features) {
-            JLabel featureLabel = new JLabel(feature);
+            JLabel featureLabel = new JLabel("<html>" + feature + "</html>");
             featureLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             featureLabel.setForeground(TEXT_DARK);
             featureLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -243,16 +235,11 @@ public class MainFrame extends JFrame {
         footerPanel.setPreferredSize(new Dimension(0, 40));
         footerPanel.setBorder(new EmptyBorder(10, 20, 10, 20));
         
-        JLabel copyrightLabel = new JLabel("© 2025 Vehicle Rental System. All rights reserved.");
+        JLabel copyrightLabel = new JLabel("© 2024 Vehicle Rental System. All rights reserved.");
         copyrightLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         copyrightLabel.setForeground(new Color(189, 195, 199));
         
-        JLabel versionLabel = new JLabel("v1.0.0");
-        versionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        versionLabel.setForeground(new Color(189, 195, 199));
-        
         footerPanel.add(copyrightLabel, BorderLayout.WEST);
-        footerPanel.add(versionLabel, BorderLayout.EAST);
         
         return footerPanel;
     }
@@ -263,10 +250,16 @@ public class MainFrame extends JFrame {
         refresh();
     }
     
-    private void showRentalPanel(Customer customer) {
-        contentPanel.removeAll();
-        contentPanel.add(new RentalPanel(this, customer), BorderLayout.CENTER);
-        refresh();
+    private void showRentalPanel() {
+        CustomerLoginDialog dialog = new CustomerLoginDialog(this);
+        dialog.setVisible(true);
+
+        Customer customer = dialog.getAuthenticatedCustomer();
+        if (customer != null) {
+            contentPanel.removeAll();
+            contentPanel.add(new RentalPanel(this, customer), BorderLayout.CENTER);
+            refresh();
+        }
     }
     
     public void showHome() {
@@ -280,6 +273,17 @@ public class MainFrame extends JFrame {
     }
     
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
+        // Set system look and feel
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Show splash screen first
+        SwingUtilities.invokeLater(() -> {
+            SplashScreen splash = new SplashScreen();
+            splash.showSplash();
+        });
     }
 }

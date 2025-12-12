@@ -8,17 +8,19 @@ public abstract class Vehicle {
     protected String plateNumber;
     protected double pricePerDay;
     protected boolean available;
+    protected String imagePath;
 
     public Vehicle() {}
 
     public Vehicle(int id, String brand, String model,
-                   String plateNumber, double pricePerDay, boolean available) {
+                   String plateNumber, double pricePerDay, boolean available, String imagePath) {
         this.id = id;
         this.brand = brand;
         this.model = model;
         this.plateNumber = plateNumber;
         this.pricePerDay = pricePerDay;
         this.available = available;
+        this.imagePath = imagePath;
     }
 
     // getters and setters
@@ -36,9 +38,14 @@ public abstract class Vehicle {
 
     public double getPricePerDay() { return pricePerDay; }
     public void setPricePerDay(double pricePerDay) { this.pricePerDay = pricePerDay; }
+    
+    public String getImagePath() { return imagePath; }
+    public void setImagePath(String imagePath) { this.imagePath = imagePath; }
 
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+    
+    public abstract String getExtra();
 
     public abstract String getType();
 }

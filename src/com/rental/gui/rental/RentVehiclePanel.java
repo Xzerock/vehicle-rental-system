@@ -1,16 +1,13 @@
 package com.rental.gui.rental;
 
-import com.rental.dao.CustomerDAO;
 import com.rental.dao.VehicleDAO;
 import com.rental.model.Customer;
 import com.rental.model.Vehicle;
 import com.rental.service.RentalService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.io.File;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
@@ -29,12 +26,13 @@ public class RentVehiclePanel extends JPanel {
     private static final Color CARD_BG = Color.WHITE;
     private static final Color TEXT_DARK = new Color(44, 62, 80);
     private static final Color TEXT_LIGHT = new Color(127, 140, 141);
+    private static final Color BORDER_COLOR = new Color(189, 195, 199);
 
-    private JTable vehicleTable;
-    private DefaultTableModel tableModel;
+    private JPanel vehicleListPanel;
     private JTextField txtStartDate;
     private JTextField txtEndDate;
     private JLabel lblCalculatedPrice;
+    private Vehicle selectedVehicle;
 
     public RentVehiclePanel(Customer customer) {
         this.customer = customer;
@@ -48,13 +46,18 @@ public class RentVehiclePanel extends JPanel {
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
         add(createHeaderPanel(), BorderLayout.NORTH);
+        add(createFormPanel(), BorderLayout.SOUTH);
 
-        JPanel mainPanel = new JPanel(new BorderLayout(15, 15));
-        mainPanel.setBackground(CONTENT_BG);
-        mainPanel.add(createFormPanel(), BorderLayout.NORTH);
-        mainPanel.add(createTablePanel(), BorderLayout.CENTER);
+        // Scrollable vehicle list
+        vehicleListPanel = new JPanel();
+        vehicleListPanel.setLayout(new BoxLayout(vehicleListPanel, BoxLayout.Y_AXIS));
+        vehicleListPanel.setBackground(CONTENT_BG);
 
-        add(mainPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(vehicleListPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private JPanel createHeaderPanel() {
@@ -63,7 +66,7 @@ public class RentVehiclePanel extends JPanel {
         headerPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         // Back button
-        JButton btnBack = new JButton("Back");
+        JButton btnBack = new JButton("← Back");
         btnBack.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         btnBack.setForeground(PRIMARY_COLOR);
         btnBack.setBackground(CONTENT_BG);
@@ -99,161 +102,342 @@ public class RentVehiclePanel extends JPanel {
         JPanel formContainer = new JPanel(new BorderLayout());
         formContainer.setBackground(CARD_BG);
         formContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
             new EmptyBorder(20, 20, 20, 20)
         ));
 
-        JLabel formTitle = new JLabel("Rental Information");
+        JLabel formTitle = new JLabel("Rental Details");
         formTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         formTitle.setForeground(TEXT_DARK);
-        formTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         
-        // Row 1 – Logged-in Customer (READ ONLY)
+        // Customer info
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(createLabel("Customer:"), gbc);
 
         gbc.gridx = 1; gbc.weightx = 1;
-        JLabel lblCustomer = new JLabel(
-                customer.getName() + " (" + customer.getPhone() + ")"
-        );
+        JLabel lblCustomer = new JLabel(customer.getName() + " (" + customer.getType() + ")");
         lblCustomer.setFont(new Font("Segoe UI", Font.BOLD, 14));
         lblCustomer.setForeground(TEXT_DARK);
         formPanel.add(lblCustomer, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(createLabel("Start Date (YYYY-MM-DD):"), gbc);
+        formPanel.add(createLabel("Start Date:"), gbc);
         
         gbc.gridx = 3; gbc.weightx = 1;
         txtStartDate = createStyledTextField();
         txtStartDate.setText(LocalDate.now().toString());
+        txtStartDate.addCaretListener(e -> calculatePrice());
         formPanel.add(txtStartDate, gbc);
 
-        // Row 2
+        // End date and price
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        formPanel.add(createLabel("End Date (YYYY-MM-DD):"), gbc);
+        formPanel.add(createLabel("End Date:"), gbc);
         
         gbc.gridx = 1; gbc.weightx = 1;
         txtEndDate = createStyledTextField();
         txtEndDate.setText(LocalDate.now().plusDays(1).toString());
+        txtEndDate.addCaretListener(e -> calculatePrice());
         formPanel.add(txtEndDate, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(createLabel("Estimated Total:"), gbc);
         
         gbc.gridx = 3; gbc.weightx = 1;
-        lblCalculatedPrice = new JLabel("$0.00");
-        lblCalculatedPrice.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblCalculatedPrice = new JLabel("Select a vehicle");
+        lblCalculatedPrice.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblCalculatedPrice.setForeground(PRIMARY_COLOR);
         formPanel.add(lblCalculatedPrice, gbc);
 
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(CARD_BG);
-        topPanel.add(formTitle, BorderLayout.NORTH);
-        topPanel.add(formPanel, BorderLayout.CENTER);
-
-        formContainer.add(topPanel, BorderLayout.CENTER);
-
-        return formContainer;
-    }
-
-    private JPanel createTablePanel() {
-        JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(CARD_BG);
-        tableContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-            new EmptyBorder(20, 20, 20, 20)
-        ));
-
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(CARD_BG);
-        headerPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
-
-        JLabel tableTitle = new JLabel("Available Vehicles");
-        tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        tableTitle.setForeground(TEXT_DARK);
-
+        // Button panel
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 4;
+        gbc.insets = new Insets(15, 8, 0, 8);
+        
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(CARD_BG);
-
-        JButton btnRefresh = createStyledButton("Refresh", WARNING_COLOR);
-        JButton btnRent = createStyledButton("Rent Selected", SUCCESS_COLOR);
+        
+        JButton btnRefresh = createStyledButton("Refresh List", WARNING_COLOR);
+        JButton btnRent = createStyledButton("Confirm Rental", SUCCESS_COLOR);
 
         btnRefresh.addActionListener(e -> loadVehicles());
         btnRent.addActionListener(e -> rentVehicle());
 
         buttonPanel.add(btnRefresh);
         buttonPanel.add(btnRent);
+        formPanel.add(buttonPanel, gbc);
 
-        headerPanel.add(tableTitle, BorderLayout.WEST);
-        headerPanel.add(buttonPanel, BorderLayout.EAST);
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
+        topPanel.setBackground(CARD_BG);
+        topPanel.add(formTitle, BorderLayout.NORTH);
+        topPanel.add(formPanel, BorderLayout.CENTER);
 
-        tableModel = new DefaultTableModel(
-            new Object[]{"ID", "Type", "Brand", "Model", "Plate", "Price/Day"}, 0
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
+        formContainer.add(topPanel);
+        return formContainer;
+    }
+
+    private JPanel createVehicleCard(Vehicle vehicle) {
+        JPanel card = new JPanel(new BorderLayout(15, 0));
+        card.setBackground(CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(15, 15, 15, 15)
+        ));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Image panel - LARGER SIZE
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setPreferredSize(new Dimension(240, 160)); // Increased from 180x120
+        imagePanel.setBackground(new Color(245, 245, 245));
+        imagePanel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
+
+        JLabel imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        imageLabel.setVerticalAlignment(JLabel.CENTER);
+
+        // Load vehicle image
+        ImageIcon vehicleImage = loadVehicleImage(vehicle.getImagePath());
+        if (vehicleImage != null) {
+            imageLabel.setIcon(vehicleImage);
+        } else {
+            // Fallback icon
+            imageLabel.setText("🚗");
+            imageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 64)); // Larger fallback icon
+            imageLabel.setForeground(TEXT_LIGHT);
+        }
+
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
+
+        // Info panel
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(CARD_BG);
+
+        JLabel lblBrand = new JLabel(vehicle.getBrand() + " " + vehicle.getModel());
+        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblBrand.setForeground(TEXT_DARK);
+        lblBrand.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblType = new JLabel(vehicle.getType());
+        lblType.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblType.setForeground(TEXT_LIGHT);
+        lblType.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblPlate = new JLabel("Plate: " + vehicle.getPlateNumber());
+        lblPlate.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblPlate.setForeground(TEXT_DARK);
+        lblPlate.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblPrice = new JLabel(String.format("$%.2f per day", vehicle.getPricePerDay()));
+        lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblPrice.setForeground(PRIMARY_COLOR);
+        lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(lblBrand);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        infoPanel.add(lblType);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        infoPanel.add(lblPlate);
+        infoPanel.add(Box.createVerticalGlue());
+        infoPanel.add(lblPrice);
         
-        vehicleTable = new JTable(tableModel);
-        vehicleTable.getTableHeader().setReorderingAllowed(false); // ✅ Prevent column dragging
-        vehicleTable.setFillsViewportHeight(true); // ✅ Fill viewport
-        vehicleTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // ✅ Auto-resize
-        vehicleTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        vehicleTable.setRowHeight(35);
-        vehicleTable.setGridColor(new Color(189, 195, 199));
-        vehicleTable.setSelectionBackground(new Color(174, 214, 241));
-        vehicleTable.setSelectionForeground(TEXT_DARK);
-        vehicleTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JLabel lblExtra = new JLabel(vehicle.getExtra());
+        lblExtra.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblExtra.setForeground(TEXT_DARK);
+        lblExtra.setAlignmentX(Component.LEFT_ALIGNMENT);
+        infoPanel.add(lblExtra);
 
-        // Add selection listener to calculate price
-        vehicleTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                calculatePrice();
+        infoPanel.add(Box.createVerticalGlue());
+        infoPanel.add(lblPrice);
+
+        // Selection indicator
+        JPanel statusPanel = new JPanel(new BorderLayout());
+        statusPanel.setBackground(CARD_BG);
+        statusPanel.setPreferredSize(new Dimension(120, 0));
+        
+        JLabel lblStatus = new JLabel("Available");
+        lblStatus.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblStatus.setForeground(SUCCESS_COLOR);
+        lblStatus.setHorizontalAlignment(JLabel.CENTER);
+        lblStatus.setVerticalAlignment(JLabel.TOP);
+        statusPanel.add(lblStatus, BorderLayout.NORTH);
+
+        card.add(imagePanel, BorderLayout.WEST);
+        card.add(infoPanel, BorderLayout.CENTER);
+        card.add(statusPanel, BorderLayout.EAST);
+
+        // Click to select
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                selectVehicle(vehicle, card);
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (selectedVehicle != vehicle) {
+                    card.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(PRIMARY_COLOR, 2),
+                        new EmptyBorder(14, 14, 14, 14)
+                    ));
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                if (selectedVehicle != vehicle) {
+                    card.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                        new EmptyBorder(15, 15, 15, 15)
+                    ));
+                }
             }
         });
 
-        JTableHeader header = vehicleTable.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        header.setBackground(PRIMARY_COLOR);
-        header.setForeground(Color.WHITE);
-        header.setPreferredSize(new Dimension(0, 40));
+        return card;
+    }
 
-        // ✅ Custom header renderer with bold, centered text
-        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                setFont(new Font("Segoe UI", Font.BOLD, 13));
-                setBackground(PRIMARY_COLOR);
-                setForeground(Color.WHITE);
-                setHorizontalAlignment(JLabel.CENTER);
-                setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-                return this;
+    private void selectVehicle(Vehicle vehicle, JPanel card) {
+        // Deselect previous
+        for (Component comp : vehicleListPanel.getComponents()) {
+            if (comp instanceof JPanel && comp != card) {
+                JPanel panel = (JPanel) comp;  // Cast it!
+                panel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER_COLOR, 1),
+                    new EmptyBorder(15, 15, 15, 15)
+                ));
             }
-        };
-        header.setDefaultRenderer(headerRenderer);
-
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < vehicleTable.getColumnCount(); i++) {
-            vehicleTable.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
-        JScrollPane scrollPane = new JScrollPane(vehicleTable);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
+        // Select current
+        selectedVehicle = vehicle;
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(PRIMARY_COLOR, 3),
+            new EmptyBorder(14, 14, 14, 14)
+        ));
+        card.setBackground(new Color(232, 248, 240));
 
-        tableContainer.add(headerPanel, BorderLayout.NORTH);
-        tableContainer.add(scrollPane, BorderLayout.CENTER);
+        calculatePrice();
+    }
 
-        return tableContainer;
+    private ImageIcon loadVehicleImage(String imagePath) {
+        if (imagePath == null || imagePath.isEmpty()) {
+            return null;
+        }
+
+        try {
+            File imageFile = new File(imagePath);
+            if (imageFile.exists()) {
+                ImageIcon icon = new ImageIcon(imagePath);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH); // Updated size
+                return new ImageIcon(scaledImage);
+            }
+
+            // Try as resource
+            java.net.URL imgURL = getClass().getResource("/" + imagePath);
+            if (imgURL != null) {
+                ImageIcon icon = new ImageIcon(imgURL);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH); // Updated size
+                return new ImageIcon(scaledImage);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load image: " + imagePath);
+        }
+
+        return null;
+    }
+
+    private void calculatePrice() {
+        if (selectedVehicle == null) {
+            lblCalculatedPrice.setText("Select a vehicle");
+            return;
+        }
+
+        try {
+            LocalDate start = LocalDate.parse(txtStartDate.getText().trim());
+            LocalDate end = LocalDate.parse(txtEndDate.getText().trim());
+            
+            long days = java.time.temporal.ChronoUnit.DAYS.between(start, end);
+            if (days <= 0) days = 1;
+            
+            double total = selectedVehicle.getPricePerDay() * days;
+            lblCalculatedPrice.setText(String.format("$%.2f (%d days)", total, days));
+        } catch (Exception e) {
+            lblCalculatedPrice.setText("Invalid dates");
+        }
+    }
+
+    private void loadVehicles() {
+        try {
+            List<Vehicle> vehicles = vehicleDAO.getAvailableVehicles();
+            vehicleListPanel.removeAll();
+            selectedVehicle = null;
+            lblCalculatedPrice.setText("Select a vehicle");
+
+            if (vehicles.isEmpty()) {
+                JLabel noVehiclesLabel = new JLabel("No vehicles available");
+                noVehiclesLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+                noVehiclesLabel.setForeground(TEXT_LIGHT);
+                noVehiclesLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                vehicleListPanel.add(Box.createVerticalGlue());
+                vehicleListPanel.add(noVehiclesLabel);
+                vehicleListPanel.add(Box.createVerticalGlue());
+            } else {
+                for (Vehicle vehicle : vehicles) {
+                    vehicleListPanel.add(createVehicleCard(vehicle));
+                    vehicleListPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                }
+            }
+
+            vehicleListPanel.revalidate();
+            vehicleListPanel.repaint();
+
+        } catch (SQLException e) {
+            showError("Error loading vehicles: " + e.getMessage());
+        }
+    }
+
+    private void rentVehicle() {
+        if (selectedVehicle == null) {
+            showError("Please select a vehicle.");
+            return;
+        }
+
+        try {
+            LocalDate start = LocalDate.parse(txtStartDate.getText().trim());
+            LocalDate end = LocalDate.parse(txtEndDate.getText().trim());
+
+            if (end.isBefore(start) || end.isEqual(start)) {
+                showError("End date must be after start date.");
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(
+                this,
+                String.format("Confirm rental of %s %s\nFrom: %s\nTo: %s\nTotal: %s",
+                    selectedVehicle.getBrand(),
+                    selectedVehicle.getModel(),
+                    start,
+                    end,
+                    lblCalculatedPrice.getText()
+                ),
+                "Confirm Rental",
+                JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                rentalService.rentVehicle(customer, selectedVehicle, start, end);
+                showSuccess("Vehicle rented successfully!");
+                loadVehicles();
+            }
+
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
     }
 
     private JLabel createLabel(String text) {
@@ -267,7 +451,7 @@ public class RentVehiclePanel extends JPanel {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199)),
+            BorderFactory.createLineBorder(BORDER_COLOR),
             new EmptyBorder(5, 10, 5, 10)
         ));
         return textField;
@@ -281,7 +465,7 @@ public class RentVehiclePanel extends JPanel {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setPreferredSize(new Dimension(130, 35));
+        button.setPreferredSize(new Dimension(140, 38));
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -293,87 +477,6 @@ public class RentVehiclePanel extends JPanel {
         });
 
         return button;
-    }
-
-    private void calculatePrice() {
-        int row = vehicleTable.getSelectedRow();
-        if (row < 0) {
-            lblCalculatedPrice.setText("$0.00");
-            return;
-        }
-
-        try {
-            String priceStr = tableModel.getValueAt(row, 5).toString();
-            double pricePerDay = Double.parseDouble(priceStr.replace("$", ""));
-            
-            LocalDate start = LocalDate.parse(txtStartDate.getText().trim());
-            LocalDate end = LocalDate.parse(txtEndDate.getText().trim());
-            
-            long days = java.time.temporal.ChronoUnit.DAYS.between(start, end);
-            if (days <= 0) days = 1;
-            
-            double total = pricePerDay * days;
-            lblCalculatedPrice.setText(String.format("$%.2f (%d days)", total, days));
-        } catch (Exception e) {
-            lblCalculatedPrice.setText("Invalid dates");
-        }
-    }
-
-    private void loadVehicles() {
-        try {
-            List<Vehicle> vehicles = vehicleDAO.getAvailableVehicles();
-            tableModel.setRowCount(0);
-
-            for (Vehicle v : vehicles) {
-                tableModel.addRow(new Object[]{
-                    v.getId(),
-                    v.getType(),
-                    v.getBrand(),
-                    v.getModel(),
-                    v.getPlateNumber(),
-                    String.format("$%.2f", v.getPricePerDay())
-                });
-            }
-        } catch (SQLException e) {
-            showError("Error loading vehicles: " + e.getMessage());
-        }
-    }
-
-    private void rentVehicle() {
-        int row = vehicleTable.getSelectedRow();
-        Customer customer = this.customer;
-
-        if (customer == null || row < 0) {
-            showError("Please select a customer and a vehicle.");
-            return;
-        }
-
-        try {
-            int vehicleId = (int) tableModel.getValueAt(row, 0);
-            Vehicle vehicle = vehicleDAO.getAllVehicles()
-                    .stream()
-                    .filter(v -> v.getId() == vehicleId)
-                    .findFirst()
-                    .orElse(null);
-
-            if (vehicle == null) {
-                showError("Vehicle not found.");
-                return;
-            }
-
-            LocalDate start = LocalDate.parse(txtStartDate.getText().trim());
-            LocalDate end = LocalDate.parse(txtEndDate.getText().trim());
-
-            rentalService.rentVehicle(customer, vehicle, start, end);
-
-            showSuccess("Vehicle rented successfully!");
-            loadVehicles();
-            vehicleTable.clearSelection();
-            lblCalculatedPrice.setText("$0.00");
-
-        } catch (Exception e) {
-            showError(e.getMessage());
-        }
     }
 
     private void showError(String msg) {

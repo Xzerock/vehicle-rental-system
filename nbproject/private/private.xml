@@ -25,6 +25,9 @@
             <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/rental/RentVehiclePanel.java</file>
             <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/rental/ReturnVehiclePanel.java</file>
             <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/admin/AdminLoginDialog.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/customer/CustomerLoginDialog.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/customer/CustomerSignupDialog.java</file>
+            <file>file:/C:/Users/henry/Documents/Code/Java/VehicleRentalSystem/src/com/rental/gui/SplashScreen.java</file>
         </group>
     </open-files>
 </project-private>

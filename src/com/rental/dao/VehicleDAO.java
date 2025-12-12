@@ -10,8 +10,8 @@ public class VehicleDAO {
     // INSERT
     public void addVehicle(Vehicle vehicle) throws SQLException {
         String sql = """
-            INSERT INTO vehicle(type, brand, model, plate_number, price_per_day, available)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO vehicle(type, brand, model, plate_number, price_per_day, available, image_path, seats, cc, capacity)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -23,6 +23,24 @@ public class VehicleDAO {
             ps.setString(4, vehicle.getPlateNumber());
             ps.setDouble(5, vehicle.getPricePerDay());
             ps.setBoolean(6, vehicle.isAvailable());
+            ps.setString(7, vehicle.getImagePath());
+
+            // extra fields based on type
+            if (vehicle instanceof Car c) {
+                ps.setInt(8, c.getSeats());
+                ps.setNull(9, Types.INTEGER);
+                ps.setNull(10, Types.DOUBLE);
+            } 
+            else if (vehicle instanceof Bike b) {
+                ps.setNull(8, Types.INTEGER);
+                ps.setInt(9, b.getEngineCC());
+                ps.setNull(10, Types.DOUBLE);
+            } 
+            else if (vehicle instanceof Van v) {
+                ps.setNull(8, Types.INTEGER);
+                ps.setNull(9, Types.INTEGER);
+                ps.setDouble(10, v.getCargoCapacity());
+            }
 
             ps.executeUpdate();
         }
@@ -73,24 +91,53 @@ public class VehicleDAO {
         }
     }
 
-    // ✅ POLYMORPHISM HANDLER
-    private Vehicle mapRowToVehicle(ResultSet rs) throws SQLException {
-        String type = rs.getString("type");
+private Vehicle mapRowToVehicle(ResultSet rs) throws SQLException {
+    String type = rs.getString("type");
+    Vehicle v;
 
-        Vehicle v = switch (type) {
-            case "CAR" -> new Car();
-            case "BIKE" -> new Bike();
-            case "VAN" -> new Van();
-            default -> throw new IllegalArgumentException("Unknown vehicle type");
-        };
-
-        v.setId(rs.getInt("id"));
-        v.setBrand(rs.getString("brand"));
-        v.setModel(rs.getString("model"));
-        v.setPlateNumber(rs.getString("plate_number"));
-        v.setPricePerDay(rs.getDouble("price_per_day"));
-        v.setAvailable(rs.getBoolean("available"));
-
-        return v;
+    switch (type) {
+        case "CAR" -> {
+            int seats = rs.getInt("seats");
+            v = new Car(
+                rs.getInt("id"),
+                rs.getString("brand"),
+                rs.getString("model"),
+                rs.getString("plate_number"),
+                rs.getDouble("price_per_day"),
+                rs.getBoolean("available"),
+                seats,
+                rs.getString("image_path")
+            );
+        }
+        case "BIKE" -> {
+            int cc = rs.getInt("cc");
+            v = new Bike(
+                rs.getInt("id"),
+                rs.getString("brand"),
+                rs.getString("model"),
+                rs.getString("plate_number"),
+                rs.getDouble("price_per_day"),
+                rs.getBoolean("available"),
+                cc,
+                rs.getString("image_path")
+            );
+        }
+        case "VAN" -> {
+            double capacity = rs.getDouble("capacity");
+            v = new Van(
+                rs.getInt("id"),
+                rs.getString("brand"),
+                rs.getString("model"),
+                rs.getString("plate_number"),
+                rs.getDouble("price_per_day"),
+                rs.getBoolean("available"),
+                capacity,
+                rs.getString("image_path")
+            );
+        }
+        default -> throw new IllegalArgumentException("Unknown vehicle type");
     }
+
+    return v;
+}
 }

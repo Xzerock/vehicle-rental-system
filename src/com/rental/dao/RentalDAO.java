@@ -57,6 +57,12 @@ public class RentalDAO {
 
                 rental.setRentalId(rs.getInt("rental_id"));
                 rental.setRentalDate(rs.getDate("rental_date").toLocalDate());
+
+                Date returnDate = rs.getDate("return_date");
+                if (returnDate != null) {
+                    rental.setReturnDate(returnDate.toLocalDate());
+                }
+
                 rental.setTotalPrice(rs.getDouble("total_price"));
 
                 // customer
@@ -84,7 +90,17 @@ public class RentalDAO {
         List<Rental> list = new ArrayList<>();
 
         String sql = """
-            SELECT r.*, c.name, v.type, v.brand, v.model
+            SELECT 
+                r.*, 
+                c.name AS customer_name,
+                v.id AS v_id,
+                v.type,
+                v.brand,
+                v.model,
+                v.plate_number,
+                v.price_per_day,
+                v.available,
+                v.image_path
             FROM rental r
             JOIN customer c ON r.customer_id = c.id
             JOIN vehicle v ON r.vehicle_id = v.id
@@ -99,23 +115,43 @@ public class RentalDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Rental rental = new Rental();
 
+                    Rental rental = new Rental();
+                    
                     rental.setRentalId(rs.getInt("rental_id"));
                     rental.setRentalDate(rs.getDate("rental_date").toLocalDate());
-                    rental.setTotalPrice(rs.getDouble("total_price"));
 
+                    // 🔥 THIS WAS MISSING — add this
+                    Date returnDate = rs.getDate("return_date");
+                    if (returnDate != null) {
+                        rental.setReturnDate(returnDate.toLocalDate());
+                    }
+
+                    rental.setTotalPrice(rs.getDouble("total_price"));
+                    // Customer
                     Customer customer = new Customer();
                     customer.setId(customerId);
-                    customer.setName(rs.getString("name"));
-
-                    Vehicle vehicle = new Car(); // fine for now
-                    vehicle.setId(rs.getInt("vehicle_id"));
-                    vehicle.setBrand(rs.getString("brand"));
-                    vehicle.setModel(rs.getString("model"));
-
+                    customer.setName(rs.getString("customer_name"));
                     rental.setCustomer(customer);
-                    rental.setVehicle(vehicle);
+
+                    // Vehicle (POLYMORPHIC)
+                    String type = rs.getString("type");
+                    Vehicle v = switch (type) {
+                        case "CAR" -> new Car();
+                        case "BIKE" -> new Bike();
+                        case "VAN" -> new Van();
+                        default -> throw new IllegalArgumentException("Unknown type: " + type);
+                    };
+
+                    v.setId(rs.getInt("v_id"));
+                    v.setBrand(rs.getString("brand"));
+                    v.setModel(rs.getString("model"));
+                    v.setPlateNumber(rs.getString("plate_number"));
+                    v.setPricePerDay(rs.getDouble("price_per_day"));
+                    v.setAvailable(rs.getBoolean("available"));
+                    v.setImagePath(rs.getString("image_path")); // ✅ FIXED — now image loads
+
+                    rental.setVehicle(v);
 
                     list.add(rental);
                 }

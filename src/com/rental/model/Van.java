@@ -8,8 +8,8 @@ public class Van extends Vehicle {
 
     public Van(int id, String brand, String model,
                String plateNumber, double pricePerDay,
-               boolean available, double cargoCapacity) {
-        super(id, brand, model, plateNumber, pricePerDay, available);
+               boolean available, double cargoCapacity, String imagePath) {
+        super(id, brand, model, plateNumber, pricePerDay, available, imagePath);
         this.cargoCapacity = cargoCapacity;
     }
 
@@ -21,5 +21,9 @@ public class Van extends Vehicle {
     @Override
     public String getType() {
         return "VAN";
+    }
+    @Override
+    public String getExtra() {
+        return cargoCapacity + " kg";
     }
 }

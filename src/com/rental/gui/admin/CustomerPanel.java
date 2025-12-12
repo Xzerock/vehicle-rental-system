@@ -1,12 +1,11 @@
 package com.rental.gui.admin;
 
 import com.rental.dao.CustomerDAO;
+import com.rental.dao.RentalDAO;
 import com.rental.model.Customer;
+import com.rental.model.Rental;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
@@ -14,6 +13,7 @@ import java.util.List;
 public class CustomerPanel extends JPanel {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
+    private final RentalDAO rentalDAO = new RentalDAO();
 
     // Modern colors
     private static final Color PRIMARY_COLOR = new Color(41, 128, 185);
@@ -25,14 +25,14 @@ public class CustomerPanel extends JPanel {
     private static final Color CARD_BG = Color.WHITE;
     private static final Color TEXT_DARK = new Color(44, 62, 80);
     private static final Color TEXT_LIGHT = new Color(127, 140, 141);
+    private static final Color BORDER_COLOR = new Color(189, 195, 199);
 
     private JComboBox<String> cmbType;
     private JTextField txtName;
     private JTextField txtPhone;
     private JTextField txtEmail;
 
-    private JTable table;
-    private DefaultTableModel tableModel;
+    private JPanel customerListPanel;
 
     public CustomerPanel() {
         initUI();
@@ -45,18 +45,18 @@ public class CustomerPanel extends JPanel {
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
         add(createHeaderPanel(), BorderLayout.NORTH);
+        add(createFormPanel(), BorderLayout.SOUTH);
 
-        // Use JSplitPane for better space management
-        JPanel formPanel = createFormPanel();
-        JPanel tablePanel = createTablePanel();
-        
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, formPanel, tablePanel);
-        splitPane.setDividerLocation(220); // Fixed form height
-        splitPane.setResizeWeight(0.0); // Table gets extra space
-        splitPane.setBorder(null);
-        splitPane.setBackground(CONTENT_BG);
+        // Scrollable customer list
+        customerListPanel = new JPanel();
+        customerListPanel.setLayout(new BoxLayout(customerListPanel, BoxLayout.Y_AXIS));
+        customerListPanel.setBackground(CONTENT_BG);
 
-        add(splitPane, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(customerListPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private JPanel createHeaderPanel() {
@@ -73,7 +73,6 @@ public class CustomerPanel extends JPanel {
         btnBack.setBorderPainted(false);
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnBack.addActionListener(e -> {
-            // Navigate back to admin menu
             Container parent = getParent();
             if (parent != null) {
                 parent.removeAll();
@@ -110,14 +109,13 @@ public class CustomerPanel extends JPanel {
         JPanel formContainer = new JPanel(new BorderLayout());
         formContainer.setBackground(CARD_BG);
         formContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
             new EmptyBorder(20, 20, 20, 20)
         ));
 
         JLabel formTitle = new JLabel("Add New Customer");
         formTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         formTitle.setForeground(TEXT_DARK);
-        formTitle.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(CARD_BG);
@@ -127,7 +125,7 @@ public class CustomerPanel extends JPanel {
 
         // Row 1
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        formPanel.add(createLabel("Customer Type:"), gbc);
+        formPanel.add(createLabel("Type:"), gbc);
         
         gbc.gridx = 1; gbc.weightx = 1;
         cmbType = new JComboBox<>(new String[]{"REGULAR", "PREMIUM"});
@@ -143,14 +141,14 @@ public class CustomerPanel extends JPanel {
 
         // Row 2
         gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        formPanel.add(createLabel("Phone Number:"), gbc);
+        formPanel.add(createLabel("Phone:"), gbc);
         
         gbc.gridx = 1; gbc.weightx = 1;
         txtPhone = createStyledTextField();
         formPanel.add(txtPhone, gbc);
 
         gbc.gridx = 2; gbc.weightx = 0;
-        formPanel.add(createLabel("Email Address:"), gbc);
+        formPanel.add(createLabel("Email:"), gbc);
         
         gbc.gridx = 3; gbc.weightx = 1;
         txtEmail = createStyledTextField();
@@ -168,7 +166,7 @@ public class CustomerPanel extends JPanel {
         buttonPanel.add(btnClear);
         buttonPanel.add(btnAdd);
 
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new BorderLayout(0, 15));
         topPanel.setBackground(CARD_BG);
         topPanel.add(formTitle, BorderLayout.NORTH);
         topPanel.add(formPanel, BorderLayout.CENTER);
@@ -179,106 +177,122 @@ public class CustomerPanel extends JPanel {
         return formContainer;
     }
 
-    private JPanel createTablePanel() {
-        JPanel tableContainer = new JPanel(new BorderLayout());
-        tableContainer.setBackground(CARD_BG);
-        tableContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-            new EmptyBorder(20, 20, 20, 20)
+    private JPanel createCustomerCard(Customer customer) {
+        JPanel card = new JPanel(new BorderLayout(15, 0));
+        card.setBackground(CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER_COLOR, 1),
+            new EmptyBorder(15, 15, 15, 15)
         ));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
 
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(CARD_BG);
-        headerPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
+        // Info panel
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        infoPanel.setBackground(CARD_BG);
 
-        JLabel tableTitle = new JLabel("Customer Directory");
-        tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        tableTitle.setForeground(TEXT_DARK);
+        JLabel lblName = new JLabel(customer.getName());
+        lblName.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblName.setForeground(TEXT_DARK);
+        lblName.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton btnRefresh = createStyledButton("Refresh", PRIMARY_COLOR);
-        btnRefresh.addActionListener(e -> loadCustomers());
+        JLabel lblType = new JLabel(customer.getType() + " Customer");
+        lblType.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblType.setForeground("PREMIUM".equals(customer.getType()) ? PREMIUM_COLOR : TEXT_LIGHT);
+        lblType.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        headerPanel.add(tableTitle, BorderLayout.WEST);
-        headerPanel.add(btnRefresh, BorderLayout.EAST);
+        JLabel lblPhone = new JLabel(customer.getPhone());
+        lblPhone.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblPhone.setForeground(TEXT_DARK);
+        lblPhone.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        tableModel = new DefaultTableModel(
-            new Object[]{"ID", "Type", "Name", "Phone", "Email"}, 0
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
+        JLabel lblEmail = new JLabel((customer.getEmail() != null ? customer.getEmail() : "N/A"));
+        lblEmail.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblEmail.setForeground(TEXT_LIGHT);
+        lblEmail.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        infoPanel.add(lblName);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        infoPanel.add(lblType);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        infoPanel.add(lblPhone);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        infoPanel.add(lblEmail);
+
+        // Rental info panel (RIGHT side)
+        JPanel rentalPanel = new JPanel();
+        rentalPanel.setLayout(new BoxLayout(rentalPanel, BoxLayout.Y_AXIS));
+        rentalPanel.setBackground(CARD_BG);
+        rentalPanel.setPreferredSize(new Dimension(350, 0));
+
+        try {
+            List<Rental> activeRentals = rentalDAO.getActiveRentalsByCustomer(customer.getId());
+            
+            if (activeRentals.isEmpty()) {
+                JLabel lblNoRentals = new JLabel("No active rentals");
+                lblNoRentals.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+                lblNoRentals.setForeground(TEXT_LIGHT);
+                lblNoRentals.setAlignmentX(Component.LEFT_ALIGNMENT);
+                rentalPanel.add(lblNoRentals);
+            } else {
+                JLabel lblRentalTitle = new JLabel("Active Rentals:");
+                lblRentalTitle.setFont(new Font("Segoe UI", Font.BOLD, 13));
+                lblRentalTitle.setForeground(TEXT_DARK);
+                lblRentalTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+                rentalPanel.add(lblRentalTitle);
+                rentalPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+
+                for (Rental rental : activeRentals) {
+                    JLabel lblRental = new JLabel(rental.getVehicle().getBrand() + " " + 
+                                                  rental.getVehicle().getModel() + 
+                                                  " (" + rental.getVehicle().getPlateNumber() + ")");
+                    lblRental.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+                    lblRental.setForeground(WARNING_COLOR);
+                    lblRental.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    rentalPanel.add(lblRental);
+                    rentalPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+                }
             }
-        };
-
-        table = new JTable(tableModel);
-        table.getTableHeader().setReorderingAllowed(false); // ✅ Prevent column dragging
-        table.setFillsViewportHeight(true); // ✅ Fill viewport
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // ✅ Auto-resize
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.setRowHeight(35);
-        table.setGridColor(new Color(189, 195, 199));
-        table.setSelectionBackground(new Color(174, 214, 241));
-        table.setSelectionForeground(TEXT_DARK);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        JTableHeader header = table.getTableHeader();
-        header.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        header.setBackground(PRIMARY_COLOR);
-        header.setForeground(Color.WHITE);
-        header.setPreferredSize(new Dimension(0, 40));
-
-        // ✅ Custom header renderer with bold, centered text
-        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                setFont(new Font("Segoe UI", Font.BOLD, 13));
-                setBackground(PRIMARY_COLOR);
-                setForeground(Color.WHITE);
-                setHorizontalAlignment(JLabel.CENTER);
-                setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-                return this;
-            }
-        };
-        header.setDefaultRenderer(headerRenderer);
-
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        } catch (SQLException e) {
+            JLabel lblError = new JLabel("Error loading rentals");
+            lblError.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+            lblError.setForeground(DANGER_COLOR);
+            lblError.setAlignmentX(Component.LEFT_ALIGNMENT);
+            rentalPanel.add(lblError);
         }
 
-        // Custom renderer for type column
-        table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                setHorizontalAlignment(JLabel.CENTER);
+        card.add(infoPanel, BorderLayout.WEST);
+        card.add(rentalPanel, BorderLayout.EAST);
 
-                if (!isSelected) {
-                    if ("PREMIUM".equals(value)) {
-                        c.setForeground(PREMIUM_COLOR);
-                        setFont(new Font("Segoe UI", Font.BOLD, 13));
-                        setText("PREMIUM");
-                    } else {
-                        c.setForeground(TEXT_DARK);
-                        setFont(new Font("Segoe UI", Font.PLAIN, 13));
-                        setText("REGULAR");
-                    }
+        return card;
+    }
+
+    private void loadCustomers() {
+        try {
+            List<Customer> customers = customerDAO.getAllCustomers();
+            customerListPanel.removeAll();
+
+            if (customers.isEmpty()) {
+                JLabel noCustomersLabel = new JLabel("No customers found");
+                noCustomersLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+                noCustomersLabel.setForeground(TEXT_LIGHT);
+                noCustomersLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                customerListPanel.add(Box.createVerticalGlue());
+                customerListPanel.add(noCustomersLabel);
+                customerListPanel.add(Box.createVerticalGlue());
+            } else {
+                for (Customer customer : customers) {
+                    customerListPanel.add(createCustomerCard(customer));
+                    customerListPanel.add(Box.createRigidArea(new Dimension(0, 10)));
                 }
-                return c;
             }
-        });
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(189, 195, 199)));
+            customerListPanel.revalidate();
+            customerListPanel.repaint();
 
-        tableContainer.add(headerPanel, BorderLayout.NORTH);
-        tableContainer.add(scrollPane, BorderLayout.CENTER);
-
-        return tableContainer;
+        } catch (SQLException e) {
+            showError("Error loading customers: " + e.getMessage());
+        }
     }
 
     private JLabel createLabel(String text) {
@@ -292,7 +306,7 @@ public class CustomerPanel extends JPanel {
         JTextField textField = new JTextField();
         textField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         textField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(189, 195, 199)),
+            BorderFactory.createLineBorder(BORDER_COLOR),
             new EmptyBorder(5, 10, 5, 10)
         ));
         return textField;
@@ -348,25 +362,6 @@ public class CustomerPanel extends JPanel {
         txtPhone.setText("");
         txtEmail.setText("");
         cmbType.setSelectedIndex(0);
-    }
-
-    private void loadCustomers() {
-        try {
-            List<Customer> customers = customerDAO.getAllCustomers();
-            tableModel.setRowCount(0);
-
-            for (Customer c : customers) {
-                tableModel.addRow(new Object[]{
-                    c.getId(),
-                    c.getType(),
-                    c.getName(),
-                    c.getPhone(),
-                    c.getEmail()
-                });
-            }
-        } catch (SQLException e) {
-            showError("Error loading customers: " + e.getMessage());
-        }
     }
 
     private void showError(String message) {

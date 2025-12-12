@@ -29,6 +29,7 @@ public class RentalPanel extends JPanel {
         initUI();
     }
     
+    
     private void initUI() {
         setLayout(new BorderLayout());
         setBackground(CONTENT_BG);
