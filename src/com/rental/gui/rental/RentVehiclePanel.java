@@ -233,7 +233,7 @@ public class RentVehiclePanel extends JPanel {
         lblPlate.setForeground(TEXT_DARK);
         lblPlate.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblPrice = new JLabel(String.format("$%.2f per day", vehicle.getPricePerDay()));
+        JLabel lblPrice = new JLabel(String.format("RM%.2f per day", vehicle.getPricePerDay()));
         lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblPrice.setForeground(PRIMARY_COLOR);
         lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -365,7 +365,7 @@ public class RentVehiclePanel extends JPanel {
             if (days <= 0) days = 1;
             
             double total = selectedVehicle.getPricePerDay() * days;
-            lblCalculatedPrice.setText(String.format("$%.2f (%d days)", total, days));
+            lblCalculatedPrice.setText(String.format("RM%.2f (%d days)", total, days));
         } catch (Exception e) {
             lblCalculatedPrice.setText("Invalid dates");
         }

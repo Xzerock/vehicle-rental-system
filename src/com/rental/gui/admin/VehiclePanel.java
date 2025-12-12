@@ -247,11 +247,11 @@ public class VehiclePanel extends JPanel {
             BorderFactory.createLineBorder(BORDER_COLOR, 1),
             new EmptyBorder(15, 15, 15, 15)
         ));
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
 
         // Image panel
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setPreferredSize(new Dimension(240, 160));
+        imagePanel.setPreferredSize(new Dimension(240, 150));
         imagePanel.setBackground(new Color(245, 245, 245));
         imagePanel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
 
@@ -290,7 +290,13 @@ public class VehiclePanel extends JPanel {
         lblPlate.setForeground(TEXT_DARK);
         lblPlate.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel lblPrice = new JLabel(String.format("$%.2f per day", vehicle.getPricePerDay()));
+        // ✅ NEW: Add extra info (seats/cc/capacity)
+        JLabel lblExtra = new JLabel(vehicle.getExtra());
+        lblExtra.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblExtra.setForeground(TEXT_DARK);
+        lblExtra.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblPrice = new JLabel(String.format("RM%.2f per day", vehicle.getPricePerDay()));
         lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblPrice.setForeground(PRIMARY_COLOR);
         lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -298,8 +304,10 @@ public class VehiclePanel extends JPanel {
         infoPanel.add(lblBrand);
         infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         infoPanel.add(lblType);
-        infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
         infoPanel.add(lblPlate);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+        infoPanel.add(lblExtra);
         infoPanel.add(Box.createVerticalGlue());
         infoPanel.add(lblPrice);
 
@@ -344,14 +352,14 @@ public class VehiclePanel extends JPanel {
             File imageFile = new File(imagePath);
             if (imageFile.exists()) {
                 ImageIcon icon = new ImageIcon(imagePath);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
 
             java.net.URL imgURL = getClass().getResource("/" + imagePath);
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
         } catch (Exception e) {

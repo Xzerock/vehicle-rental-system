@@ -204,18 +204,4 @@
             loadingTimer.setRepeats(false);
             loadingTimer.start();
         }
-
-        public static void main(String[] args) {
-            // Set system look and feel
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            SwingUtilities.invokeLater(() -> {
-                SplashScreen splash = new SplashScreen();
-                splash.showSplash();
-            });
-        }
     }

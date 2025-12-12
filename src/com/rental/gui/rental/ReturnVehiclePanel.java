@@ -148,12 +148,12 @@ public class ReturnVehiclePanel extends JPanel {
             BorderFactory.createLineBorder(BORDER_COLOR, 1),
             new EmptyBorder(15, 15, 15, 15)
         ));
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
         card.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
         // Vehicle image panel
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setPreferredSize(new Dimension(240, 130));
+        imagePanel.setPreferredSize(new Dimension(240, 150));
         imagePanel.setBackground(new Color(245, 245, 245));
         imagePanel.setBorder(BorderFactory.createLineBorder(BORDER_COLOR));
         
@@ -194,28 +194,58 @@ public class ReturnVehiclePanel extends JPanel {
         lblRentalDate.setForeground(TEXT_LIGHT);
         lblRentalDate.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        long daysRented = ChronoUnit.DAYS.between(rental.getRentalDate(), LocalDate.now());
-        if (daysRented <= 0) daysRented = 1;
+        // FIX: Calculate days rented correctly based on expected return date
+        LocalDate rentalDate = rental.getRentalDate();
+        LocalDate expectedReturnDate = rental.getExpectedReturnDate();
         
-        JLabel lblDuration = new JLabel(String.format("Duration: %d days", daysRented));
+        long daysRented;
+        if (expectedReturnDate != null) {
+            // Calculate based on the rental period (start to expected end)
+            daysRented = ChronoUnit.DAYS.between(rentalDate, expectedReturnDate);
+            if (daysRented == 0) {
+                daysRented = 1; // Minimum 1 day
+            }
+        } else {
+            // Fallback: calculate from rental date to today
+            LocalDate today = LocalDate.now();
+            daysRented = ChronoUnit.DAYS.between(rentalDate, today);
+            if (daysRented == 0) {
+                daysRented = 1;
+            }
+        }
+        
+        JLabel lblDuration = new JLabel(String.format("Duration: %d day%s", daysRented, daysRented > 1 ? "s" : ""));
         lblDuration.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         lblDuration.setForeground(TEXT_LIGHT);
         lblDuration.setAlignmentX(Component.LEFT_ALIGNMENT);
         
-        JLabel lblPrice = new JLabel(String.format("Total: $%.2f", rental.getTotalPrice()));
+        // NEW: Add expected return date
+        JLabel lblReturnDate = null;
+        if (rental.getExpectedReturnDate() != null) {
+            lblReturnDate = new JLabel("Due: " + rental.getExpectedReturnDate());
+            lblReturnDate.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            
+            // Check if overdue
+            LocalDate today = LocalDate.now();
+            LocalDate returnDate = rental.getExpectedReturnDate();
+            if (today.isAfter(returnDate)) {
+                long daysOverdue = ChronoUnit.DAYS.between(returnDate, today);
+                lblReturnDate.setText("Due: " + rental.getExpectedReturnDate() + " (Overdue by " + daysOverdue + " day" + (daysOverdue > 1 ? "s" : "") + ")");
+                lblReturnDate.setForeground(DANGER_COLOR);
+            } else if (today.isEqual(returnDate)) {
+                lblReturnDate.setText("Due: " + rental.getExpectedReturnDate() + " (Today)");
+                lblReturnDate.setForeground(WARNING_COLOR);
+            } else {
+                lblReturnDate.setForeground(INFO_COLOR);
+            }
+            
+            lblReturnDate.setAlignmentX(Component.LEFT_ALIGNMENT);
+        }
+        
+        JLabel lblPrice = new JLabel(String.format("Total: RM%.2f", rental.getTotalPrice()));
         lblPrice.setFont(new Font("Segoe UI", Font.BOLD, 16));
         lblPrice.setForeground(PRIMARY_COLOR);
         lblPrice.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
-        JLabel lblRentalId = new JLabel("Rental #" + rental.getRentalId());
-        lblRentalId.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblRentalId.setForeground(TEXT_LIGHT);
-        lblRentalId.setHorizontalAlignment(JLabel.CENTER);
-
-        JLabel lblVehicleId = new JLabel("Vehicle #" + rental.getVehicle().getId());
-        lblVehicleId.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblVehicleId.setForeground(TEXT_LIGHT);
-        lblVehicleId.setHorizontalAlignment(JLabel.CENTER);
         
         infoPanel.add(lblVehicle);
         infoPanel.add(Box.createRigidArea(new Dimension(0, 5)));
@@ -224,6 +254,13 @@ public class ReturnVehiclePanel extends JPanel {
         infoPanel.add(lblRentalDate);
         infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
         infoPanel.add(lblDuration);
+        
+        // Add return date if available
+        if (lblReturnDate != null) {
+            infoPanel.add(Box.createRigidArea(new Dimension(0, 3)));
+            infoPanel.add(lblReturnDate);
+        }
+        
         infoPanel.add(Box.createVerticalGlue());
         infoPanel.add(lblPrice);
         
@@ -427,7 +464,7 @@ public class ReturnVehiclePanel extends JPanel {
             File imageFile = new File(imagePath);
             if (imageFile.exists()) {
                 ImageIcon icon = new ImageIcon(imagePath);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 130, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
 
@@ -435,7 +472,7 @@ public class ReturnVehiclePanel extends JPanel {
             java.net.URL imgURL = getClass().getResource("/" + imagePath);
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 130, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
         } catch (Exception e) {

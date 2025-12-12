@@ -12,7 +12,7 @@ public class RentalDAO {
     public void createRental(Rental rental) throws SQLException {
 
         String sql = """
-            INSERT INTO rental(customer_id, vehicle_id, rental_date, return_date, total_price)
+            INSERT INTO rental(customer_id, vehicle_id, rental_date, expected_return_date, total_price)
             VALUES (?, ?, ?, ?, ?)
         """;
 
@@ -22,9 +22,9 @@ public class RentalDAO {
             ps.setInt(1, rental.getCustomer().getId());
             ps.setInt(2, rental.getVehicle().getId());
             ps.setDate(3, Date.valueOf(rental.getRentalDate()));
-            ps.setDate(4, rental.getReturnDate() == null
+            ps.setDate(4, rental.getExpectedReturnDate() == null
                     ? null
-                    : Date.valueOf(rental.getReturnDate()));
+                    : Date.valueOf(rental.getExpectedReturnDate()));
             ps.setDouble(5, rental.getTotalPrice());
 
             ps.executeUpdate();
@@ -57,6 +57,11 @@ public class RentalDAO {
 
                 rental.setRentalId(rs.getInt("rental_id"));
                 rental.setRentalDate(rs.getDate("rental_date").toLocalDate());
+
+                Date expectedReturnDate = rs.getDate("expected_return_date");
+                if (expectedReturnDate != null) {
+                    rental.setExpectedReturnDate(expectedReturnDate.toLocalDate());
+                }
 
                 Date returnDate = rs.getDate("return_date");
                 if (returnDate != null) {
@@ -121,13 +126,20 @@ public class RentalDAO {
                     rental.setRentalId(rs.getInt("rental_id"));
                     rental.setRentalDate(rs.getDate("rental_date").toLocalDate());
 
-                    // 🔥 THIS WAS MISSING — add this
+                    // Expected return date (when vehicle should be returned)
+                    Date expectedReturnDate = rs.getDate("expected_return_date");
+                    if (expectedReturnDate != null) {
+                        rental.setExpectedReturnDate(expectedReturnDate.toLocalDate());
+                    }
+
+                    // Actual return date (when vehicle was returned - NULL for active rentals)
                     Date returnDate = rs.getDate("return_date");
                     if (returnDate != null) {
                         rental.setReturnDate(returnDate.toLocalDate());
                     }
 
                     rental.setTotalPrice(rs.getDouble("total_price"));
+                    
                     // Customer
                     Customer customer = new Customer();
                     customer.setId(customerId);
@@ -149,7 +161,7 @@ public class RentalDAO {
                     v.setPlateNumber(rs.getString("plate_number"));
                     v.setPricePerDay(rs.getDouble("price_per_day"));
                     v.setAvailable(rs.getBoolean("available"));
-                    v.setImagePath(rs.getString("image_path")); // ✅ FIXED — now image loads
+                    v.setImagePath(rs.getString("image_path"));
 
                     rental.setVehicle(v);
 
