@@ -461,22 +461,29 @@ public class ReturnVehiclePanel extends JPanel {
         }
 
         try {
-            File imageFile = new File(imagePath);
+            // 1️⃣ Load from images folder (correct for your setup)
+            File imageFile = new File("images/" + imagePath);
             if (imageFile.exists()) {
-                ImageIcon icon = new ImageIcon(imagePath);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
+                ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+                Image scaledImage = icon.getImage()
+                        .getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
 
-            // Try as resource
-            java.net.URL imgURL = getClass().getResource("/" + imagePath);
+            // 2️⃣ Optional future-proof: classpath resource
+            java.net.URL imgURL = getClass().getResource("/images/" + imagePath);
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 150, Image.SCALE_SMOOTH);
+                Image scaledImage = icon.getImage()
+                        .getScaledInstance(240, 150, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
+
+            System.err.println("Image not found: " + imagePath);
+
         } catch (Exception e) {
             System.err.println("Failed to load image: " + imagePath);
+            e.printStackTrace();
         }
 
         return null;

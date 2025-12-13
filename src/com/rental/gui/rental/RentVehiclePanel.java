@@ -330,22 +330,29 @@ public class RentVehiclePanel extends JPanel {
         }
 
         try {
-            File imageFile = new File(imagePath);
+            // 1️⃣ Try filesystem: images folder next to JAR / project
+            File imageFile = new File("images/" + imagePath);
             if (imageFile.exists()) {
-                ImageIcon icon = new ImageIcon(imagePath);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH); // Updated size
+                ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+                Image scaledImage = icon.getImage()
+                        .getScaledInstance(240, 160, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
 
-            // Try as resource
-            java.net.URL imgURL = getClass().getResource("/" + imagePath);
+            // 2️⃣ Try classpath resource (future-proof)
+            java.net.URL imgURL = getClass().getResource("/images/" + imagePath);
             if (imgURL != null) {
                 ImageIcon icon = new ImageIcon(imgURL);
-                Image scaledImage = icon.getImage().getScaledInstance(240, 160, Image.SCALE_SMOOTH); // Updated size
+                Image scaledImage = icon.getImage()
+                        .getScaledInstance(240, 160, Image.SCALE_SMOOTH);
                 return new ImageIcon(scaledImage);
             }
+
+            System.err.println("Image not found: " + imagePath);
+
         } catch (Exception e) {
             System.err.println("Failed to load image: " + imagePath);
+            e.printStackTrace();
         }
 
         return null;
