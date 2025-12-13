@@ -11,7 +11,7 @@ MySQL Server 8.x
 
 MySQL Workbench (optional but recommended)
 
-📌 1. Install MySQL
+1. Install MySQL
 
 Download MySQL Installer:
 https://dev.mysql.com/downloads/installer/
@@ -24,14 +24,14 @@ MySQL Workbench
 
 Remember the root password you set.
 
-📌 2. Create Database
+2. Create Database
 
 Open MySQL Workbench → New SQL Tab → run:
 
 CREATE DATABASE rentaldb;
 USE rentaldb;
 
-📌 3. Create Tables
+3. Create Tables
 customer
 CREATE TABLE customer (
     id INT PRIMARY KEY,
@@ -67,7 +67,7 @@ CREATE TABLE rental (
     expected_return_date DATE
 );
 
-📌 4. Insert Sample Data
+4. Insert Sample Data
 customer
 INSERT INTO customer VALUES
 (1,'REGULAR','John Tan','0123456789','john@mail.com'),
@@ -82,32 +82,6 @@ INSERT INTO rental VALUES
 (3,4,7,'2025-12-12','2025-12-12',600,'2025-12-15');
 
 vehicle
-
-⚠ Image files must be placed in:
-
-C:\Users\<your_username>\Documents\Code\Java\VehicleRentalSystem\images\
-
-
-Required images:
-
-car.jpg
-
-bike.jpg
-
-van.jpg
-
-supra.png
-
-ae86.jpg
-
-atto3.jpg
-
-y15zr.jpg
-
-nv200.JPG
-
-Insert vehicles (replace <your_username>):
-
 INSERT INTO vehicle VALUES
 (1,'CAR','Toyota','Vios','ABC123',150,1,'car.jpg',5,NULL,NULL),
 (2,'BIKE','Honda','Goldwing Tour','WHS3929',600,1,'bike.jpg',NULL,1833,NULL),
@@ -118,7 +92,7 @@ INSERT INTO vehicle VALUES
 (7,'BIKE','Yamaha','Y15ZR','JJ3344',200,1,'y15zr.jpg',NULL,150,NULL),
 (8,'VAN','Nissan','NV200','JSK5976',700,1,'nv200.JPG',NULL,NULL,740);
 
-📌 5. Database Configuration
+5. Database Configuration
 
 Your app must point to this database:
 
@@ -126,7 +100,7 @@ url=jdbc:mysql://localhost:3306/rentaldb
 user=root
 password=YOUR_PASSWORD
 
-📌 6. Running the Application
+6. Running the Application
 
 Run the JAR using:
 
