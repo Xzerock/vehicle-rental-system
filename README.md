@@ -94,11 +94,22 @@ INSERT INTO vehicle VALUES
 
 5. Database Configuration
 
-Your app must point to this database:
+This application connects to MySQL using the following file:
 
-url=jdbc:mysql://localhost:3306/rentaldb
-user=root
-password=YOUR_PASSWORD
+src/com/rental/dao/DatabaseConnection.java
+
+Open the file and edit these values:
+
+private static final String URL =
+    "jdbc:mysql://<HOST>:<PORT>/<DATABASE_NAME>"
+  + "?useSSL=false"
+  + "&serverTimezone=UTC"
+  + "&allowPublicKeyRetrieval=true";
+
+private static final String USER = "root";
+private static final String PASSWORD = "YOUR_MYSQL_PASSWORD";
+
+You must change PASSWORD to match your MySQL password, and JBDC connection URL to match your database name or the app will not connect.
 
 6. Running the Application
 
