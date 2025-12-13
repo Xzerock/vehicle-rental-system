@@ -41,6 +41,29 @@ public class VehiclePanel extends JPanel {
         loadVehicles();
     }
     
+    private void copyImageToImagesFolder(File sourceFile) {
+        try {
+            File imagesDir = new File("images");
+            if (!imagesDir.exists()) {
+                imagesDir.mkdirs();
+            }
+
+            File destFile = new File(imagesDir, sourceFile.getName());
+
+            // Avoid overwriting existing images
+            if (!destFile.exists()) {
+                java.nio.file.Files.copy(
+                    sourceFile.toPath(),
+                    destFile.toPath()
+                );
+            }
+
+        } catch (Exception e) {
+            showError("Failed to copy image to images folder.");
+            e.printStackTrace();
+        }
+    }
+    
     private void chooseImage() {
         JFileChooser fc = new JFileChooser();
         fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -48,8 +71,14 @@ public class VehiclePanel extends JPanel {
         int option = fc.showOpenDialog(this);
 
         if (option == JFileChooser.APPROVE_OPTION) {
-            selectedImagePath = fc.getSelectedFile().getAbsolutePath();
-            lblImageFile.setText(fc.getSelectedFile().getName());
+            File selectedFile = fc.getSelectedFile();
+
+            // ✅ Store ONLY filename
+            selectedImagePath = selectedFile.getName();
+            lblImageFile.setText(selectedFile.getName());
+
+            // ⚠ Optional but recommended: copy image into images folder
+            copyImageToImagesFolder(selectedFile);
         }
     }
 
