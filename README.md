@@ -58,7 +58,7 @@ CREATE TABLE vehicle (
 
 rental
 CREATE TABLE rental (
-    rental_id INT PRIMARY KEY,
+    rental_id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT,
     vehicle_id INT,
     rental_date DATE,
