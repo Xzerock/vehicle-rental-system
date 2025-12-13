@@ -109,14 +109,14 @@ nv200.JPG
 Insert vehicles (replace <your_username>):
 
 INSERT INTO vehicle VALUES
-(1,'CAR','Toyota','Vios','ABC123',150,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\car.jpg',5,NULL,NULL),
-(2,'BIKE','Honda','Goldwing Tour','WHS3929',600,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\bike.jpg',NULL,1833,NULL),
-(3,'VAN','Volvo','A10','ABC3344',110,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\van.jpg',NULL,NULL,1200),
-(4,'CAR','Toyota','Supra','AYE6767',350,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\supra.png',2,NULL,NULL),
-(5,'CAR','Toyota','Sprinter Trueno AE86','ABC1954',200,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\ae86.jpg',4,NULL,NULL),
-(6,'CAR','BYD','ATTO 3','JKM9934',500,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\atto3.jpg',5,NULL,NULL),
-(7,'BIKE','Yamaha','Y15ZR','JJ3344',200,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\y15zr.jpg',NULL,150,NULL),
-(8,'VAN','Nissan','NV200','JSK5976',700,1,'C:\\Users\\<your_username>\\Documents\\Code\\Java\\VehicleRentalSystem\\images\\nv200.JPG',NULL,NULL,740);
+(1,'CAR','Toyota','Vios','ABC123',150,1,'car.jpg',5,NULL,NULL),
+(2,'BIKE','Honda','Goldwing Tour','WHS3929',600,1,'bike.jpg',NULL,1833,NULL),
+(3,'VAN','Volvo','A10','ABC3344',110,1,'van.jpg',NULL,NULL,1200),
+(4,'CAR','Toyota','Supra','AYE6767',350,1,'supra.png',2,NULL,NULL),
+(5,'CAR','Toyota','Sprinter Trueno AE86','ABC1954',200,1,'ae86.jpg',4,NULL,NULL),
+(6,'CAR','BYD','ATTO 3','JKM9934',500,1,'atto3.jpg',5,NULL,NULL),
+(7,'BIKE','Yamaha','Y15ZR','JJ3344',200,1,'y15zr.jpg',NULL,150,NULL),
+(8,'VAN','Nissan','NV200','JSK5976',700,1,'nv200.JPG',NULL,NULL,740);
 
 📌 5. Database Configuration
 
